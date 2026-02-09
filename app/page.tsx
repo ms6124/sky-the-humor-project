@@ -40,7 +40,7 @@ export default async function Home() {
           {data && data.length > 0 ? (
             <section className="captionGrid">
               {data.map((row, index) => {
-                const image = row.images;
+                const image = Array.isArray(row.images) ? row.images[0] : row.images;
                 const created = row.created_datetime_utc
                   ? new Date(row.created_datetime_utc).toLocaleDateString("en-US", {
                       month: "short",
