@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import CaptionsClient from "./captions-client";
+import CaptionVoteClient from "./caption-vote-client";
 
 export const dynamic = "force-dynamic";
 
@@ -66,6 +67,22 @@ export default async function CaptionsPage({
   }
 
   const { data, error } = await query;
+  const captionIds =
+    data?.map((row) => row.id).filter((id): id is string => Boolean(id)) ?? [];
+  const voteMap = new Map<string, { id: number; value: number }>();
+
+  if (captionIds.length > 0) {
+    const { data: votes } = await supabase
+      .from("caption_votes")
+      .select("id, caption_id, vote_value")
+      .eq("profile_id", user.id)
+      .in("caption_id", captionIds);
+
+    votes?.forEach((vote) => {
+      if (!vote.caption_id) return;
+      voteMap.set(vote.caption_id, { id: vote.id, value: vote.vote_value });
+    });
+  }
 
   return (
     <main className="page">
@@ -156,6 +173,9 @@ export default async function CaptionsPage({
         ) : data && data.length > 0 ? (
           <section className="captionGrid">
             {data.map((row, index) => {
+              if (!row.id) {
+                return null;
+              }
               const image = Array.isArray(row.images) ? row.images[0] : row.images;
               const created = row.created_datetime_utc
                 ? new Date(row.created_datetime_utc).toLocaleDateString("en-US", {
@@ -184,10 +204,14 @@ export default async function CaptionsPage({
                       />
                     </div>
                   ) : null}
-                  <div className="captionMeta">
-                    <span>{created}</span>
-                    <span>{row.like_count ?? 0} likes</span>
-                  </div>
+                  <CaptionVoteClient
+                    captionId={row.id}
+                    userId={user.id}
+                    initialVoteId={voteMap.get(row.id)?.id ?? null}
+                    initialVoteValue={voteMap.get(row.id)?.value ?? null}
+                    initialLikeCount={row.like_count ?? 0}
+                    createdLabel={created}
+                  />
                 </article>
               );
             })}
