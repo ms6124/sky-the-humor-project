@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import CaptionsClient from "./captions-client";
 import CaptionVoteClient from "./caption-vote-client";
+import CaptionPipelineClient from "./caption-pipeline-client";
 
 export const dynamic = "force-dynamic";
 
@@ -103,6 +104,8 @@ export default async function CaptionsPage({
             <CaptionsClient />
           </div>
         </header>
+
+        <CaptionPipelineClient />
 
         <section className="captionToolbar">
           <form className="searchBar" action="/captions" method="get">

@@ -259,6 +259,100 @@ body {
   gap: 12px;
 }
 
+.uploadCard {
+  margin-bottom: 24px;
+}
+
+.uploadForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.uploadField {
+  display: grid;
+  gap: 8px;
+  flex: 1 1 240px;
+}
+
+.uploadLabel {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+}
+
+.fileInput {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(12, 17, 26, 0.85);
+  color: var(--foreground);
+}
+
+.uploadHint {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.statusRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.statusText {
+  color: #f7f0e8;
+}
+
+.imagePreview {
+  display: grid;
+  gap: 8px;
+}
+
+.previewImage {
+  width: 100%;
+  max-height: 280px;
+  object-fit: cover;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.uploadUrl {
+  font-size: 12px;
+  color: var(--muted);
+  word-break: break-all;
+}
+
+.captionResults {
+  display: grid;
+  gap: 10px;
+}
+
+.captionResultsLabel {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+}
+
+.captionResultList {
+  display: grid;
+  gap: 10px;
+}
+
+.captionResult {
+  border-radius: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(12, 17, 26, 0.8);
+  color: #f7f0e8;
+}
+
 .loginLayout {
   display: grid;
   gap: 24px;
