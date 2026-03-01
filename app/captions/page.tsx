@@ -60,24 +60,12 @@ export default async function CaptionsPage({
     .eq("profile_id", user.id)
     .eq("vote_value", 1);
 
-  let query = supabase
-    .from("captions")
-    .select(
-      "id, content, like_count, is_featured, created_datetime_utc, images!inner (url, image_description, is_public)",
-      { count: "exact" }
-    )
-    .eq("images.is_public", true)
-    .not("images.url", "is", null)
-    .range(rangeFrom, rangeTo);
+  let data = null;
+  let error = null;
+  let count = null;
 
-  if (queryText) {
-    query = query.ilike("content", `%${queryText}%`);
-  }
-
-  if (sort === "popular") {
-    query = query.order("like_count", { ascending: false });
-  } else if (sort === "liked") {
-    query = supabase
+  if (sort === "liked") {
+    let likedQuery = supabase
       .from("captions")
       .select(
         "id, content, like_count, is_featured, created_datetime_utc, images!inner (url, image_description, is_public), caption_votes!inner(profile_id, vote_value)",
@@ -87,13 +75,42 @@ export default async function CaptionsPage({
       .eq("caption_votes.vote_value", 1)
       .eq("images.is_public", true)
       .not("images.url", "is", null)
-      .order("created_datetime_utc", { ascending: false })
       .range(rangeFrom, rangeTo);
-  } else {
-    query = query.order("created_datetime_utc", { ascending: false });
-  }
 
-  const { data, error, count } = await query;
+    if (queryText) {
+      likedQuery = likedQuery.ilike("content", `%${queryText}%`);
+    }
+
+    const result = await likedQuery.order("created_datetime_utc", { ascending: false });
+    data = result.data;
+    error = result.error;
+    count = result.count;
+  } else {
+    let query = supabase
+      .from("captions")
+      .select(
+        "id, content, like_count, is_featured, created_datetime_utc, images!inner (url, image_description, is_public)",
+        { count: "exact" }
+      )
+      .eq("images.is_public", true)
+      .not("images.url", "is", null)
+      .range(rangeFrom, rangeTo);
+
+    if (queryText) {
+      query = query.ilike("content", `%${queryText}%`);
+    }
+
+    if (sort === "popular") {
+      query = query.order("like_count", { ascending: false });
+    } else {
+      query = query.order("created_datetime_utc", { ascending: false });
+    }
+
+    const result = await query;
+    data = result.data;
+    error = result.error;
+    count = result.count;
+  }
   const captionIds =
     data?.map((row) => row.id).filter((id): id is string => Boolean(id)) ?? [];
   const voteMap = new Map<string, { id: number; value: number }>();
