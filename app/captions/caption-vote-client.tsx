@@ -87,13 +87,17 @@ export default function CaptionVoteClient({
 
     const { data, error } = await supabase
       .from("caption_votes")
-      .insert({
-        caption_id: captionId,
-        profile_id: userId,
-        vote_value: value,
-        created_datetime_utc: timestamp,
-      })
-      .select("id")
+      .upsert(
+        {
+          caption_id: captionId,
+          profile_id: userId,
+          vote_value: value,
+          created_datetime_utc: timestamp,
+          modified_datetime_utc: timestamp,
+        },
+        { onConflict: "profile_id,caption_id" }
+      )
+      .select("id, vote_value")
       .single();
 
     if (error) {
@@ -103,7 +107,7 @@ export default function CaptionVoteClient({
     }
 
     setVoteId(data?.id ?? null);
-    setCurrentVote(value);
+    setCurrentVote(data?.vote_value ?? value);
     if (likeDelta !== 0) {
       setLikeCount((count) => Math.max(0, count + likeDelta));
     }

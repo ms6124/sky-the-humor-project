@@ -11,6 +11,7 @@ type SearchParams = {
   q?: string;
   sort?: string;
   filter?: string;
+  page?: string;
 };
 
 function buildQueryString(base: SearchParams, updates: Partial<SearchParams>) {
@@ -20,6 +21,7 @@ function buildQueryString(base: SearchParams, updates: Partial<SearchParams>) {
   if (merged.q) params.set("q", merged.q);
   if (merged.sort) params.set("sort", merged.sort);
   if (merged.filter) params.set("filter", merged.filter);
+  if (merged.page) params.set("page", merged.page);
 
   const query = params.toString();
   return query ? `?${query}` : "";
@@ -41,36 +43,62 @@ export default async function CaptionsPage({
 
   const resolvedParams = await searchParams;
   const queryText = (resolvedParams.q ?? "").trim();
-  const sort = resolvedParams.sort === "liked" ? "liked" : "newest";
-  const filter = resolvedParams.filter === "featured" ? "featured" : "all";
+  const sort =
+    resolvedParams.sort === "liked"
+      ? "liked"
+      : resolvedParams.sort === "popular"
+        ? "popular"
+        : "newest";
+  const pageSize = 24;
+  const currentPage = Math.max(1, Number(resolvedParams.page) || 1);
+  const rangeFrom = (currentPage - 1) * pageSize;
+  const rangeTo = rangeFrom + pageSize - 1;
+
+  const { count: likedCount } = await supabase
+    .from("caption_votes")
+    .select("id", { count: "exact", head: true })
+    .eq("profile_id", user.id)
+    .eq("vote_value", 1);
 
   let query = supabase
     .from("captions")
     .select(
-      "id, content, like_count, is_featured, created_datetime_utc, images!inner (url, image_description, is_public)"
+      "id, content, like_count, is_featured, created_datetime_utc, images!inner (url, image_description, is_public)",
+      { count: "exact" }
     )
     .eq("images.is_public", true)
     .not("images.url", "is", null)
-    .limit(24);
+    .range(rangeFrom, rangeTo);
 
   if (queryText) {
     query = query.ilike("content", `%${queryText}%`);
   }
 
-  if (filter === "featured") {
-    query = query.eq("is_featured", true);
-  }
-
-  if (sort === "liked") {
+  if (sort === "popular") {
     query = query.order("like_count", { ascending: false });
+  } else if (sort === "liked") {
+    query = supabase
+      .from("captions")
+      .select(
+        "id, content, like_count, is_featured, created_datetime_utc, images!inner (url, image_description, is_public), caption_votes!inner(profile_id, vote_value)",
+        { count: "exact" }
+      )
+      .eq("caption_votes.profile_id", user.id)
+      .eq("caption_votes.vote_value", 1)
+      .eq("images.is_public", true)
+      .not("images.url", "is", null)
+      .order("created_datetime_utc", { ascending: false })
+      .range(rangeFrom, rangeTo);
   } else {
     query = query.order("created_datetime_utc", { ascending: false });
   }
 
-  const { data, error } = await query;
+  const { data, error, count } = await query;
   const captionIds =
     data?.map((row) => row.id).filter((id): id is string => Boolean(id)) ?? [];
   const voteMap = new Map<string, { id: number; value: number }>();
+  const totalCount = count ?? data?.length ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
   if (captionIds.length > 0) {
     const { data: votes } = await supabase
@@ -117,51 +145,38 @@ export default async function CaptionsPage({
               defaultValue={queryText}
             />
             <input type="hidden" name="sort" value={sort} />
-            <input type="hidden" name="filter" value={filter} />
             <button className="button buttonSecondary" type="submit">
               Search
             </button>
           </form>
           <div className="filterChips">
-            <span className="chipLabel">Filter</span>
-            <Link
-              className={filter === "all" ? "chip chipActive" : "chip"}
-              href={`/captions${buildQueryString(
-                { q: queryText, sort, filter },
-                { filter: "all" }
-              )}`}
-            >
-              All
-            </Link>
-            <Link
-              className={filter === "featured" ? "chip chipActive" : "chip"}
-              href={`/captions${buildQueryString(
-                { q: queryText, sort, filter },
-                { filter: "featured" }
-              )}`}
-            >
-              Featured
-            </Link>
-          </div>
-          <div className="filterChips">
             <span className="chipLabel">Sort</span>
             <Link
               className={sort === "newest" ? "chip chipActive" : "chip"}
               href={`/captions${buildQueryString(
-                { q: queryText, sort, filter },
-                { sort: "newest" }
+                { q: queryText, sort },
+                { sort: "newest", page: "1" }
               )}`}
             >
               Newest
             </Link>
             <Link
-              className={sort === "liked" ? "chip chipActive" : "chip"}
+              className={sort === "popular" ? "chip chipActive" : "chip"}
               href={`/captions${buildQueryString(
-                { q: queryText, sort, filter },
-                { sort: "liked" }
+                { q: queryText, sort },
+                { sort: "popular", page: "1" }
               )}`}
             >
               Most liked
+            </Link>
+            <Link
+              className={sort === "liked" ? "chip chipActive" : "chip"}
+              href={`/captions${buildQueryString(
+                { q: queryText, sort },
+                { sort: "liked", page: "1" }
+              )}`}
+            >
+              My likes {likedCount ? `(${likedCount})` : ""}
             </Link>
           </div>
         </section>
@@ -224,6 +239,44 @@ export default async function CaptionsPage({
             {queryText ? "No matches for your search yet." : "No captions returned yet."}
           </div>
         )}
+
+        <section className="pagination">
+          <span className="paginationMeta">
+            Page {currentPage} of {totalPages}
+          </span>
+          <div className="paginationActions">
+            {currentPage > 1 ? (
+              <Link
+                className="button buttonSecondary"
+                href={`/captions${buildQueryString(
+                  { q: queryText, sort },
+                  { page: String(currentPage - 1) }
+                )}`}
+              >
+                Previous
+              </Link>
+            ) : (
+              <span className="button buttonSecondary" aria-disabled="true">
+                Previous
+              </span>
+            )}
+            {currentPage < totalPages ? (
+              <Link
+                className="button buttonSecondary"
+                href={`/captions${buildQueryString(
+                  { q: queryText, sort },
+                  { page: String(currentPage + 1) }
+                )}`}
+              >
+                Next
+              </Link>
+            ) : (
+              <span className="button buttonSecondary" aria-disabled="true">
+                Next
+              </span>
+            )}
+          </div>
+        </section>
       </div>
     </main>
   );

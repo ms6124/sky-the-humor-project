@@ -46,6 +46,19 @@ body {
   pointer-events: none;
 }
 
+.page.swipeThemeLight {
+  background:
+    radial-gradient(1200px 420px at 10% -10%, rgba(255, 178, 71, 0.28), transparent 60%),
+    radial-gradient(800px 420px at 90% 0%, rgba(93, 193, 185, 0.24), transparent 60%),
+    linear-gradient(180deg, #f5f6f8 0%, #e7ebf0 100%);
+  color: #10131a;
+}
+
+.page.swipeThemeLight::after {
+  opacity: 0.22;
+  background-image: radial-gradient(rgba(0, 0, 0, 0.08) 1px, transparent 1px);
+}
+
 .container {
   position: relative;
   z-index: 1;
@@ -189,6 +202,266 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.16em;
   color: var(--muted);
+}
+
+.swipeLayout {
+  display: grid;
+  gap: 20px;
+  align-items: center;
+  transition: color 0.2s ease;
+}
+
+.swipeMeta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+}
+
+.swipeCounter {
+  font-weight: 600;
+  color: #f7f0e8;
+}
+
+.swipeHint {
+  text-transform: none;
+  letter-spacing: 0.04em;
+}
+
+.swipeMetaActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.swipeMetaButton {
+  padding: 8px 14px;
+  font-size: 12px;
+}
+
+.swipeStack {
+  position: relative;
+  min-height: 420px;
+  display: grid;
+  place-items: center;
+}
+
+.swipeCard {
+  width: min(520px, 100%);
+  border-radius: 26px;
+  border: 1px solid var(--card-border);
+  background: linear-gradient(160deg, rgba(21, 27, 36, 0.95), rgba(12, 17, 26, 0.98));
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5);
+  padding: 22px;
+  cursor: grab;
+  touch-action: pan-y;
+  position: absolute;
+  top: 0;
+  left: 50%;
+}
+
+.swipeCard:active {
+  cursor: grabbing;
+}
+
+.swipeCardGhost {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  opacity: 0.5;
+  filter: saturate(0.8);
+  pointer-events: none;
+}
+
+.swipeCardContent {
+  display: grid;
+  gap: 16px;
+}
+
+.swipeHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+}
+
+.swipeBadge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 159, 28, 0.2);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.swipeDate {
+  color: var(--muted);
+}
+
+.swipeText {
+  font-size: 20px;
+  line-height: 1.5;
+  color: #f7f0e8;
+}
+
+.swipeImageFrame {
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #0c111a;
+}
+
+.swipeImage {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  display: block;
+}
+
+.swipeFooter {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+}
+
+.swipeControls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.swipeButton {
+  min-width: 64px;
+  font-size: 22px;
+  line-height: 1;
+  padding: 10px 18px;
+}
+
+.swipeStatus {
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.swipeThemeLight .swipeCard,
+.swipeThemeLight .swipeCardGhost {
+  background: linear-gradient(150deg, rgba(246, 246, 241, 0.98), rgba(235, 238, 243, 0.98));
+  color: #10131a;
+  border-color: rgba(16, 19, 26, 0.12);
+  box-shadow: 0 28px 60px rgba(8, 10, 14, 0.2);
+}
+
+.swipeThemeLight .swipeText,
+.swipeThemeLight .swipeCounter {
+  color: #10131a;
+}
+
+.swipeThemeLight .swipeHeader,
+.swipeThemeLight .swipeFooter,
+.swipeThemeLight .swipeMeta,
+.swipeThemeLight .swipeStatus {
+  color: #4d5563;
+}
+
+.swipeThemeLight .badge,
+.swipeThemeLight .memberLabel,
+.swipeThemeLight .memberInfo,
+.swipeThemeLight .subtitle,
+.swipeThemeLight .chipLabel {
+  color: #4d5563;
+}
+
+.swipeThemeLight .title,
+.swipeThemeLight .sectionTitle,
+.swipeThemeLight .memberValue {
+  color: #10131a;
+}
+
+.swipeThemeLight .card,
+.swipeThemeLight .memberPanel,
+.swipeThemeLight .searchBar {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(16, 19, 26, 0.12);
+}
+
+.swipeThemeLight .swipeBadge {
+  background: rgba(255, 159, 28, 0.25);
+  color: #6a3f00;
+}
+
+.swipeThemeLight .button {
+  background: #ffb347;
+  color: #2b1a00;
+  box-shadow: none;
+}
+
+.swipeThemeLight .buttonSecondary,
+.swipeThemeLight .buttonGhost {
+  color: #1b1f2a;
+  border-color: rgba(16, 19, 26, 0.2);
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.swipeThemeLight .buttonGhost {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.swipeThemeLight .swipeImageFrame {
+  border-color: rgba(16, 19, 26, 0.08);
+  background: #f0f3f7;
+}
+
+.swipeThemeLight .swipeMetaButton {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.swipeThemeLight .swipeMetaButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(16, 19, 26, 0.12);
+}
+
+.swipeEmpty {
+  text-align: center;
+  padding: 40px 22px;
+}
+
+.swipeEmpty .sectionTitle {
+  font-size: clamp(24px, 4vw, 32px);
+  margin-top: 10px;
+}
+
+.swipeEmpty .subtitle {
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.swipeEmpty .actions {
+  justify-content: center;
+  margin-top: 12px;
+  margin-bottom: 10px;
+}
+
+.swipeEmpty {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(280px 160px at 20% 10%, rgba(255, 159, 28, 0.18), transparent 60%),
+    radial-gradient(260px 160px at 80% 0%, rgba(46, 196, 182, 0.16), transparent 55%),
+    linear-gradient(160deg, rgba(21, 27, 36, 0.95), rgba(10, 14, 22, 0.98));
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 26px 60px rgba(0, 0, 0, 0.45);
 }
 
 .ratingButtons {
@@ -616,4 +889,33 @@ body {
   margin-top: 28px;
   font-size: 12px;
   color: var(--muted);
+}
+
+.pagination {
+  margin-top: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid var(--card-border);
+  padding-top: 18px;
+}
+
+.paginationMeta {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+}
+
+.paginationActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.paginationActions [aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

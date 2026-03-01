@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
@@ -28,6 +29,9 @@ export default function CaptionsClient() {
 
   return (
     <div className="memberActions">
+      <Link className="button buttonSecondary" href="/swipe">
+        Swipe mode
+      </Link>
       <button className="button buttonGhost" onClick={handleSignOut} disabled={isLoading}>
         {isLoading ? "Signing out..." : "Sign out"}
       </button>
