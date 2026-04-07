@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import SwipeClient, { type SwipeCard } from "./swipe-client";
+import ThemeToggle from "@/app/theme-toggle";
 
 export const dynamic = "force-dynamic";
 
@@ -94,9 +95,12 @@ export default async function SwipePage() {
             </p>
           </div>
           <div className="memberPanel">
-            <div className="memberInfo">
-              <span className="memberLabel">Signed in</span>
-              <span className="memberValue">{user.email ?? "Unknown"}</span>
+            <div className="memberTop">
+              <div className="memberInfo">
+                <span className="memberLabel">Signed in</span>
+                <span className="memberValue">{user.email ?? "Unknown"}</span>
+              </div>
+              <ThemeToggle />
             </div>
             <div className="memberActions">
               <Link className="button buttonSecondary" href="/captions">

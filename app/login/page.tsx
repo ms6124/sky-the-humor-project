@@ -17,7 +17,7 @@ export default async function LoginPage() {
   return (
     <main className="page">
       <div className="container">
-        <section className="loginLayout">
+        <section className="loginLayout stagger">
           <div className="loginHero">
             <span className="badge badgePremium">Member Access</span>
             <h1 className="loginTitle">

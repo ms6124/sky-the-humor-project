@@ -25,6 +25,7 @@ export default function CaptionVoteClient({
   const [likeCount, setLikeCount] = useState(initialLikeCount);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const likeLabel = `Score: ${likeCount}`;
 
   const getLikeDelta = (prevVote: number | null, nextVote: number | null) => {
     const prevValue = prevVote ?? 0;
@@ -59,7 +60,7 @@ export default function CaptionVoteClient({
       setVoteId(null);
       setCurrentVote(null);
       if (likeDelta !== 0) {
-        setLikeCount((count) => Math.max(0, count + likeDelta));
+        setLikeCount((count) => count + likeDelta);
       }
       setIsSaving(false);
       return;
@@ -79,7 +80,7 @@ export default function CaptionVoteClient({
 
       setCurrentVote(value);
       if (likeDelta !== 0) {
-        setLikeCount((count) => Math.max(0, count + likeDelta));
+        setLikeCount((count) => count + likeDelta);
       }
       setIsSaving(false);
       return;
@@ -109,7 +110,7 @@ export default function CaptionVoteClient({
     setVoteId(data?.id ?? null);
     setCurrentVote(data?.vote_value ?? value);
     if (likeDelta !== 0) {
-      setLikeCount((count) => Math.max(0, count + likeDelta));
+      setLikeCount((count) => count + likeDelta);
     }
     setIsSaving(false);
   };
@@ -118,7 +119,7 @@ export default function CaptionVoteClient({
     <>
       <div className="captionMeta">
         <span>{createdLabel}</span>
-        <span>{likeCount} likes</span>
+        <span>{likeLabel}</span>
       </div>
       <div className="captionRating">
       <div className="ratingButtons" role="radiogroup" aria-label="Rate this caption">

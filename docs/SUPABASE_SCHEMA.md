@@ -33,16 +33,6 @@ image_id uuid,
 CONSTRAINT caption_examples_pkey PRIMARY KEY (id),
 CONSTRAINT caption_examples_image_id_fkey FOREIGN KEY (image_id) REFERENCES public.images(id)
 );
-CREATE TABLE public.caption_likes (
-id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
-created_datetime_utc timestamp with time zone NOT NULL DEFAULT now(),
-modified_datetime_utc timestamp with time zone,
-profile_id uuid NOT NULL,
-caption_id uuid NOT NULL,
-CONSTRAINT caption_likes_pkey PRIMARY KEY (id),
-CONSTRAINT caption_likes_caption_id_fkey FOREIGN KEY (caption_id) REFERENCES public.captions(id),
-CONSTRAINT caption_likes_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id)
-);
 CREATE TABLE public.caption_requests (
 id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
 created_datetime_utc timestamp with time zone NOT NULL DEFAULT now(),
@@ -52,15 +42,15 @@ CONSTRAINT caption_requests_pkey PRIMARY KEY (id),
 CONSTRAINT caption_requests_image_id_fkey FOREIGN KEY (image_id) REFERENCES public.images(id),
 CONSTRAINT caption_requests_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id)
 );
-CREATE TABLE public.caption_saved (
+CREATE TABLE public.caption_saves (
 id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
 created_datetime_utc timestamp with time zone NOT NULL DEFAULT now(),
 modified_datetime_utc timestamp with time zone,
 profile_id uuid NOT NULL,
 caption_id uuid NOT NULL,
-CONSTRAINT caption_saved_pkey PRIMARY KEY (id),
-CONSTRAINT caption_saved_caption_id_fkey FOREIGN KEY (caption_id) REFERENCES public.captions(id),
-CONSTRAINT caption_saved_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id)
+CONSTRAINT caption_saves_pkey PRIMARY KEY (id),
+CONSTRAINT caption_saves_caption_id_fkey FOREIGN KEY (caption_id) REFERENCES public.captions(id),
+CONSTRAINT caption_saves_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id)
 );
 CREATE TABLE public.caption_votes (
 id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,

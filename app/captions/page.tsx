@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import CaptionsClient from "./captions-client";
 import CaptionVoteClient from "./caption-vote-client";
-import CaptionPipelineClient from "./caption-pipeline-client";
+import FiltersClient from "./filters-client";
+import ThemeToggle from "@/app/theme-toggle";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,10 @@ type SearchParams = {
   sort?: string;
   filter?: string;
   page?: string;
+  dateRange?: string;
+  startDate?: string;
+  endDate?: string;
+  minLikes?: string;
 };
 
 function buildQueryString(base: SearchParams, updates: Partial<SearchParams>) {
@@ -22,6 +27,10 @@ function buildQueryString(base: SearchParams, updates: Partial<SearchParams>) {
   if (merged.sort) params.set("sort", merged.sort);
   if (merged.filter) params.set("filter", merged.filter);
   if (merged.page) params.set("page", merged.page);
+  if (merged.dateRange) params.set("dateRange", merged.dateRange);
+  if (merged.startDate) params.set("startDate", merged.startDate);
+  if (merged.endDate) params.set("endDate", merged.endDate);
+  if (merged.minLikes) params.set("minLikes", merged.minLikes);
 
   const query = params.toString();
   return query ? `?${query}` : "";
@@ -49,10 +58,50 @@ export default async function CaptionsPage({
       : resolvedParams.sort === "popular"
         ? "popular"
         : "newest";
+  const dateRange =
+    resolvedParams.dateRange === "24h" ||
+    resolvedParams.dateRange === "7d" ||
+    resolvedParams.dateRange === "30d" ||
+    resolvedParams.dateRange === "custom"
+      ? resolvedParams.dateRange
+      : "all";
+  const minLikes = Math.max(0, Number(resolvedParams.minLikes) || 0);
+  const startDate = (resolvedParams.startDate ?? "").trim();
+  const endDate = (resolvedParams.endDate ?? "").trim();
   const pageSize = 24;
   const currentPage = Math.max(1, Number(resolvedParams.page) || 1);
   const rangeFrom = (currentPage - 1) * pageSize;
   const rangeTo = rangeFrom + pageSize - 1;
+  const now = new Date();
+
+  const parseDateParam = (value: string, fallbackTime: string) => {
+    if (!value) return null;
+    const parsed = new Date(`${value}${fallbackTime}`);
+    return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+  };
+
+  const getDateRangeFilter = () => {
+    if (dateRange === "24h") {
+      const since = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      return { from: since.toISOString(), to: null };
+    }
+    if (dateRange === "7d") {
+      const since = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      return { from: since.toISOString(), to: null };
+    }
+    if (dateRange === "30d") {
+      const since = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      return { from: since.toISOString(), to: null };
+    }
+    if (dateRange === "custom") {
+      const from = parseDateParam(startDate, "T00:00:00.000Z");
+      const to = parseDateParam(endDate, "T23:59:59.999Z");
+      return { from, to };
+    }
+    return { from: null, to: null };
+  };
+
+  const { from: createdFrom, to: createdTo } = getDateRangeFilter();
 
   const { count: likedCount } = await supabase
     .from("caption_votes")
@@ -80,6 +129,15 @@ export default async function CaptionsPage({
     if (queryText) {
       likedQuery = likedQuery.ilike("content", `%${queryText}%`);
     }
+    if (minLikes > 0) {
+      likedQuery = likedQuery.gte("like_count", minLikes);
+    }
+    if (createdFrom) {
+      likedQuery = likedQuery.gte("created_datetime_utc", createdFrom);
+    }
+    if (createdTo) {
+      likedQuery = likedQuery.lte("created_datetime_utc", createdTo);
+    }
 
     const result = await likedQuery.order("created_datetime_utc", { ascending: false });
     data = result.data;
@@ -98,6 +156,15 @@ export default async function CaptionsPage({
 
     if (queryText) {
       query = query.ilike("content", `%${queryText}%`);
+    }
+    if (minLikes > 0) {
+      query = query.gte("like_count", minLikes);
+    }
+    if (createdFrom) {
+      query = query.gte("created_datetime_utc", createdFrom);
+    }
+    if (createdTo) {
+      query = query.lte("created_datetime_utc", createdTo);
     }
 
     if (sort === "popular") {
@@ -134,7 +201,7 @@ export default async function CaptionsPage({
     <main className="page">
       <div className="container">
         <header className="pageHeader">
-          <div className="header">
+          <div className="header revealOnLoad">
             <span className="badge">Captions</span>
             <h1 className="title">The punchlines just dropped</h1>
             <p className="subtitle">
@@ -142,15 +209,28 @@ export default async function CaptionsPage({
             </p>
           </div>
           <div className="memberPanel">
-            <div className="memberInfo">
-              <span className="memberLabel">Signed in</span>
-              <span className="memberValue">{user.email ?? "Unknown"}</span>
+            <div className="memberTop">
+              <div className="memberInfo">
+                <span className="memberLabel">Signed in</span>
+                <span className="memberValue">{user.email ?? "Unknown"}</span>
+              </div>
+              <ThemeToggle />
             </div>
             <CaptionsClient />
           </div>
         </header>
 
-        <CaptionPipelineClient />
+        <section className="card pipelineCallout revealOnLoad">
+          <div>
+            <h2 className="sectionTitle">Need fresh captions?</h2>
+            <p className="subtitle">Upload your own image now.</p>
+          </div>
+          <div className="actions">
+            <Link className="button" href="/captions/pipeline">
+              Open caption pipeline
+            </Link>
+          </div>
+        </section>
 
         <section className="captionToolbar">
           <form className="searchBar" action="/captions" method="get">
@@ -162,7 +242,11 @@ export default async function CaptionsPage({
               defaultValue={queryText}
             />
             <input type="hidden" name="sort" value={sort} />
-            <button className="button buttonSecondary" type="submit">
+            <input type="hidden" name="dateRange" value={dateRange} />
+            <input type="hidden" name="startDate" value={startDate} />
+            <input type="hidden" name="endDate" value={endDate} />
+            <input type="hidden" name="minLikes" value={String(minLikes)} />
+            <button className="button buttonSecondary buttonSubtle buttonChipTone" type="submit">
               Search
             </button>
           </form>
@@ -171,7 +255,7 @@ export default async function CaptionsPage({
             <Link
               className={sort === "newest" ? "chip chipActive" : "chip"}
               href={`/captions${buildQueryString(
-                { q: queryText, sort },
+                { q: queryText, sort, dateRange, startDate, endDate, minLikes: String(minLikes) },
                 { sort: "newest", page: "1" }
               )}`}
             >
@@ -180,7 +264,7 @@ export default async function CaptionsPage({
             <Link
               className={sort === "popular" ? "chip chipActive" : "chip"}
               href={`/captions${buildQueryString(
-                { q: queryText, sort },
+                { q: queryText, sort, dateRange, startDate, endDate, minLikes: String(minLikes) },
                 { sort: "popular", page: "1" }
               )}`}
             >
@@ -189,13 +273,21 @@ export default async function CaptionsPage({
             <Link
               className={sort === "liked" ? "chip chipActive" : "chip"}
               href={`/captions${buildQueryString(
-                { q: queryText, sort },
+                { q: queryText, sort, dateRange, startDate, endDate, minLikes: String(minLikes) },
                 { sort: "liked", page: "1" }
               )}`}
             >
               My likes {likedCount ? `(${likedCount})` : ""}
             </Link>
           </div>
+          <FiltersClient
+            queryText={queryText}
+            sort={sort}
+            dateRange={dateRange}
+            startDate={startDate}
+            endDate={endDate}
+            minLikes={minLikes}
+          />
         </section>
 
         {error ? (
@@ -206,7 +298,7 @@ export default async function CaptionsPage({
             </p>
           </section>
         ) : data && data.length > 0 ? (
-          <section className="captionGrid">
+          <section className="captionGrid stagger">
             {data.map((row, index) => {
               if (!row.id) {
                 return null;
@@ -253,7 +345,7 @@ export default async function CaptionsPage({
           </section>
         ) : (
           <div className="empty">
-            {queryText ? "No matches for your search yet." : "No captions returned yet."}
+            {queryText ? "No matches for your search yet." : "No captions to show right now."}
           </div>
         )}
 
@@ -266,7 +358,7 @@ export default async function CaptionsPage({
               <Link
                 className="button buttonSecondary"
                 href={`/captions${buildQueryString(
-                  { q: queryText, sort },
+                  { q: queryText, sort, dateRange, startDate, endDate, minLikes: String(minLikes) },
                   { page: String(currentPage - 1) }
                 )}`}
               >
@@ -281,7 +373,7 @@ export default async function CaptionsPage({
               <Link
                 className="button buttonSecondary"
                 href={`/captions${buildQueryString(
-                  { q: queryText, sort },
+                  { q: queryText, sort, dateRange, startDate, endDate, minLikes: String(minLikes) },
                   { page: String(currentPage + 1) }
                 )}`}
               >

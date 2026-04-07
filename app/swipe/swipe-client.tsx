@@ -40,7 +40,6 @@ export default function SwipeClient({ cards, userId }: SwipeClientProps) {
   const [dragY, setDragY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [isLightMode, setIsLightMode] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -51,8 +50,6 @@ export default function SwipeClient({ cards, userId }: SwipeClientProps) {
   const actionTokensRef = useRef(new Map<string, number>());
   const hasHydratedRef = useRef(false);
   const storageKey = `swipeDeck:${userId}`;
-  const themeKey = `swipeTheme:${userId}`;
-
   const activeCard = deck[activeIndex];
   const nextCard = deck[activeIndex + 1];
 
@@ -63,10 +60,6 @@ export default function SwipeClient({ cards, userId }: SwipeClientProps) {
     if (typeof window === "undefined") return;
 
     try {
-      const storedTheme = window.localStorage.getItem(themeKey);
-      if (storedTheme === "light") {
-        setIsLightMode(true);
-      }
       const raw = window.localStorage.getItem(storageKey);
       if (!raw) return;
 
@@ -89,7 +82,7 @@ export default function SwipeClient({ cards, userId }: SwipeClientProps) {
     } catch {
       // Ignore hydration errors and fall back to server cards.
     }
-  }, [storageKey, themeKey, userId]);
+  }, [storageKey, userId]);
 
   useEffect(() => {
     if (!hasHydratedRef.current) return;
@@ -102,12 +95,6 @@ export default function SwipeClient({ cards, userId }: SwipeClientProps) {
     });
     window.localStorage.setItem(storageKey, payload);
   }, [activeIndex, deck, storageKey, userId]);
-
-  useEffect(() => {
-    if (!hasHydratedRef.current) return;
-    if (typeof window === "undefined") return;
-    window.localStorage.setItem(themeKey, isLightMode ? "light" : "dark");
-  }, [isLightMode, themeKey]);
 
   useEffect(() => {
     if (!hasHydratedRef.current) return;
@@ -394,17 +381,6 @@ export default function SwipeClient({ cards, userId }: SwipeClientProps) {
     setIsDragging(false);
   };
 
-  useEffect(() => {
-    if (typeof document === "undefined") return;
-    const page = document.querySelector(".swipeShell");
-    if (!page) return;
-    if (isLightMode) {
-      page.classList.add("swipeThemeLight");
-    } else {
-      page.classList.remove("swipeThemeLight");
-    }
-  }, [isLightMode]);
-
   if (!activeCard) {
     return (
       <section className="card swipeEmpty">
@@ -435,16 +411,9 @@ export default function SwipeClient({ cards, userId }: SwipeClientProps) {
   };
 
   return (
-    <section className={isLightMode ? "swipeLayout swipeThemeLight" : "swipeLayout"}>
+    <section className="swipeLayout">
       <div className="swipeMeta">
         <div className="swipeMetaActions">
-          <button
-            className="button buttonSecondary swipeMetaButton"
-            type="button"
-            onClick={() => setIsLightMode((prev) => !prev)}
-          >
-            {isLightMode ? "Night mode" : "Day mode"}
-          </button>
           <button
             className="button buttonGhost swipeMetaButton"
             type="button"
@@ -491,7 +460,7 @@ export default function SwipeClient({ cards, userId }: SwipeClientProps) {
               </div>
             ) : null}
             <div className="swipeFooter">
-              <span>{activeCard.likeCount} likes</span>
+              <span>Score: {activeCard.likeCount}</span>
               <span>{swipeLabel}</span>
             </div>
           </div>
